@@ -1,0 +1,17 @@
+# arduino build output
+build/
+*.hex
+*.elf
+*.bin
+
+# editor and os files
+.vscode/
+Thumbs.db
+desktop.ini
+~$*
+
+# demo videos and other large media
+*.mp4
+*.mov
+*.avi
+*.mkv
