@@ -19,8 +19,8 @@ int senVal2 = 0;
 #define RST_PIN 8
 #define SS_PIN 10
 
-int card1Balance = 5000;
-int card2Balance = 300;
+long card1Balance = 5000;
+long card2Balance = 300;
 
 #define num 7
 char Data[num];
@@ -159,6 +159,7 @@ void rfid()
 
   if (content.substring(1) == "84 E6 E0 1F")
   {
+    card = content.substring(1);
     if (card1Balance >= 500)
     {
       lcdPrint();
@@ -171,7 +172,6 @@ void rfid()
     }
     else
     {
-      card = content.substring(1);
       LcdPrint();
       lcd.setCursor(9, 1);
       lcd.print(card1Balance);
@@ -187,6 +187,7 @@ void rfid()
   }
   else if (content.substring(1) == "43 88 D9 73")
   {
+    card = content.substring(1);
     if (card2Balance >= 500)
     {
       lcdPrint();
@@ -199,7 +200,6 @@ void rfid()
     }
     else
     {
-      card = content.substring(1);
       LcdPrint();
       lcd.setCursor(9, 1);
       lcd.print(card2Balance);
@@ -208,8 +208,8 @@ void rfid()
       lcd.clear();
       lcd.setCursor(0, 0);
       lcd.print("Please Recharge");
-      lcd.clear();
       delay(2000);
+      lcd.clear();
       state = 0;
     }
   }
@@ -235,7 +235,18 @@ void KeyPad()
     Key = KP2.Getkey();
     if (Key)
     {
-      if (Key == 'A')
+      if (Key == 'A' && card == "")
+      {
+        // recharge needs a card, otherwise it gets stuck in recharge mode
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Scan your card");
+        lcd.setCursor(0, 1);
+        lcd.print("first");
+        delay(1500);
+        lcd.clear();
+      }
+      else if (Key == 'A')
       {
         lcd.clear();
         lcd.setCursor(0, 0);
@@ -252,11 +263,8 @@ void KeyPad()
 
 void clearData()
 {
-  while (data_count != 0)
-  {
-    Data[data_count--] = 0;
-  }
-  return;
+  memset(Data, 0, sizeof(Data));
+  data_count = 0;
 }
 
 void reCharge()
@@ -291,7 +299,7 @@ void reCharge()
           lcd.clear();
           recharge = 1;
         }
-        else if (card == "44 88 D9 73")
+        else if (card == "43 88 D9 73")
         {
           num2 = Data;
           card2Balance = num2.toInt() + card2Balance;
@@ -309,7 +317,8 @@ void reCharge()
           recharge = 1;
         }
       }
-      else
+      // only digits, and leave room for the '\0'
+      else if (Key >= '0' && Key <= '9' && data_count < num - 1)
       {
         Data[data_count] = Key;
         lcd.setCursor(data_count, 1);
